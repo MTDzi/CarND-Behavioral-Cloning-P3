@@ -77,7 +77,7 @@ def get_model_extended(model_name='vgg19', include_top=True):
 
 def get_lenet_model():
     inp = Input(shape=(160, 320, 3))
-    x = Cropping2D(cropping=(70, 25), (0,0))
+    x = Cropping2D(cropping=((70, 25), (0,0)))
     x = Lambda(lambda x: (x / 255.0) - 0.5)(inp)
     x = Conv2D(10, (5, 5), activation='relu')(x)
     x = MaxPooling2D(2, 2)(x)
