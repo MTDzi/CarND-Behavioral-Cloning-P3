@@ -77,18 +77,21 @@ def get_model_extended(model_name='vgg19', include_top=True):
 
 
 def get_lenet_model():
+    filter_sz = 5
     inp = Input(shape=(160, 320, 3))
-    x = Cropping2D(cropping=((70, 25), (0,0)))
+    #x = Cropping2D(cropping=((70, 25), (0,0)))
     x = Lambda(lambda x: (x / 255.0) - 0.5)(inp)
-    x = Conv2D(10, (5, 5), activation='relu')(x)
+    x = Conv2D(16, (filter_sz, filter_sz), activation='relu')(x)
     x = MaxPooling2D(2, 2)(x)
-    x = Conv2D(20, (5, 5), activation='relu')(x)
+    x = Conv2D(32, (filter_sz, filter_sz), activation='relu')(x)
     x = MaxPooling2D(2, 2)(x)
-    x = Conv2D(40, (5, 5), activation='relu')(x)
-    x = MaxPooling2D(2, 2)(x)
+    #x = Conv2D(40, (filter_sz, filter_sz), activation='relu')(x)
+    #x = MaxPooling2D(2, 2)(x)
 
     print('Shape before Flatten: {}'.format(x.get_shape()))
     x = Flatten()(x)
+    x = Dense(512)(x)
+    x = Dropout(.5)(x)
     x = Dense(256)(x)
     x = Dropout(.5)(x)
     x = Dense(128)(x)
@@ -99,7 +102,11 @@ def get_lenet_model():
 
 
 def root_mean_squared_error(y_true, y_pred):
-        return K.sqrt(K.mean(K.square(y_pred - y_true), axis=-1))
+    return K.sqrt(K.mean(K.square(y_pred - y_true), axis=-1))
+
+
+def quadruple(y_true, y_pred):
+    return K.mean(K.pow(y_pred - y_true, 4), axis=-1)	
 
 
 if __name__ == '__main__':
@@ -109,7 +116,9 @@ if __name__ == '__main__':
     
     X_flip, y_flip = np.fliplr(X), -y
 
-    model.compile(loss=root_mean_squared_error,
+    model.compile(loss=quadruple,
                   optimizer='adam',
                   metrics=[root_mean_squared_error])
-    model.fit(X, y, epochs=10, verbose=2, validation_data=(X_flip, y_flip))
+    model.fit(X, y, epochs=20, verbose=2, validation_data=(X_flip, y_flip))
+
+    model.save('model.h5')
