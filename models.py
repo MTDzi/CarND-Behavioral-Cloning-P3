@@ -4,7 +4,7 @@ from keras import applications
 from keras.preprocessing.image import ImageDataGenerator
 from keras import optimizers
 from keras.models import Sequential, Model
-from keras.layers import Dropout, Flatten, Dense, Input, Lambda, Conv2D
+from keras.layers import Dropout, Flatten, Dense, Input, Lambda, Conv2D, Cropping2D
 from keras.layers.pooling import MaxPooling2D
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard, EarlyStopping
 
@@ -77,11 +77,16 @@ def get_model_extended(model_name='vgg19', include_top=True):
 
 def get_lenet_model():
     inp = Input(shape=(160, 320, 3))
+    x = Cropping2D(cropping=(70, 25), (0,0))
     x = Lambda(lambda x: (x / 255.0) - 0.5)(inp)
     x = Conv2D(10, (5, 5), activation='relu')(x)
     x = MaxPooling2D(2, 2)(x)
     x = Conv2D(20, (5, 5), activation='relu')(x)
     x = MaxPooling2D(2, 2)(x)
+    x = Conv2D(40, (5, 5), activation='relu')(x)
+    x = MaxPooling2D(2, 2)(x)
+
+    print('Shape before Flatten: {}'.format(x.get_shape()))
     x = Flatten()(x)
     x = Dense(256)(x)
     x = Dropout(.5)(x)
@@ -92,14 +97,18 @@ def get_lenet_model():
     return Model(inp, x)
 
 
+def root_mean_squared_error(y_true, y_pred):
+        return K.sqrt(K.mean(K.square(y_pred - y_true), axis=-1))
+
 
 if __name__ == '__main__':
     from read_data import get_data
     model = get_lenet_model()
     X, y, filenames = get_data('data/default_set/')
-    X_flip, y_flip = np.fliplr(X), -y
     
-    model.compile(loss='mse',
+    X_flip, y_flip = np.fliplr(X), -y
+
+    model.compile(loss=root_mean_squared_error,
                   optimizer='adam',
-                  metrics=['mse'])
-    model.fit(X, y, verbose=1, validation_data=(X_flip, y_flip))
+                  metrics=[root_mean_squared_error])
+    model.fit(X, y, epochs=10, verbose=2, validation_data=(X_flip, y_flip))
