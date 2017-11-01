@@ -88,3 +88,15 @@ def get_lenet_model():
     x = Dense(1)(x)
 
     return Model(inp, x)
+
+
+
+if __name__ == '__main__':
+    from read_data import get_data
+    model = get_lenet_model()
+    X, y, filenames = get_data('data/default_set/')
+    model.compile(loss='mse',
+                  optimizer='adam',
+                  metrics=['mse'])
+    model.fit(X, y, verbose=1, validation_split=.1)
+    
