@@ -97,7 +97,7 @@ if __name__ == '__main__':
     from read_data import get_data
     model = get_lenet_model()
     X, y, filenames = get_data('data/default_set/')
-    X_flip, y_flip = np.flipr(X), -y
+    X_flip, y_flip = np.fliplr(X), -y
     
     model.compile(loss='mse',
                   optimizer='adam',
