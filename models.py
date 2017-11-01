@@ -1,3 +1,5 @@
+import numpy as np
+
 from keras import applications
 from keras.preprocessing.image import ImageDataGenerator
 from keras import optimizers
@@ -95,8 +97,9 @@ if __name__ == '__main__':
     from read_data import get_data
     model = get_lenet_model()
     X, y, filenames = get_data('data/default_set/')
+    X_flip, y_flip = np.flipr(X), -y
+    
     model.compile(loss='mse',
                   optimizer='adam',
                   metrics=['mse'])
-    model.fit(X, y, verbose=1, validation_split=.1)
-    
+    model.fit(X, y, verbose=1, validation_data=(X_flip, y_flip))
