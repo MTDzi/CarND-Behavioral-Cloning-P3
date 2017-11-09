@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib.pyplot import imread
 
 
-def get_data(path='data/default_set/', margin=2.5):
+def get_data(path='data/default_set/', margin=.25):
     lines = []
     with open(path + 'driving_log.csv') as file_:
         reader = csv.reader(file_)
@@ -24,11 +24,8 @@ def get_data(path='data/default_set/', margin=2.5):
         filenames.extend(img_paths)
         # import ipdb; ipdb.set_trace()
         for img_path in img_paths:
-            try:
-                img = imread(img_path)
-                images.append(img)
-            except FileNotFoundError:
-                pass
+            img = imread(img_path)
+            images.append(img)
 
         # Reading measurements
         center_angle = float(line[3])
