@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 
+from keras import backend as K
 from keras import applications
 from keras.preprocessing.image import ImageDataGenerator
 from keras import optimizers
@@ -104,6 +105,9 @@ def preprocess_img(original_image):
     return line_image + edges
 
 def get_lenet_model():
+    filter_sz = 7
+    num_filters = 24
+    padding='valid'
     inp = Input(shape=(160, 320, 3))
     # x = Cropping2D(cropping=(70, 25), (0,0))
     x = Conv2D(10, (5, 5), kernel_regularizer=l2(0.001))(inp)
@@ -127,8 +131,6 @@ def get_lenet_model():
     return Model(inp, x)
 
 
-def root_mean_squared_error(y_true, y_pred):
-        return K.sqrt(K.mean(K.square(y_pred - y_true), axis=-1))
 
 
 if __name__ == '__main__':
@@ -138,8 +140,10 @@ if __name__ == '__main__':
     X, y, filenames = get_data('data/default_set/')
     X = np.array(list(map(process_img, X)))
     # X_flip, y_flip = np.flipr(X), -y
+    # X = np.concatenate([X, X_flip])
+    # y = np.concatenate([y, y_flip])
 
-    model.compile(loss=root_mean_squared_error,
+    model.compile(loss='mse',
                   optimizer=Adam(lr=1e-4),
-                  metrics=[root_mean_squared_error])
-    model.fit(X, y, verbose=2, validation_data=(X_flip, y_flip))
+                  metrics=['mse'])
+    model.fit(X, y, verbose=1, validation_split=0.05)
