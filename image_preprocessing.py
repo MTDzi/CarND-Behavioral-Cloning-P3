@@ -5,6 +5,7 @@ from PIL import Image
 
 
 KERNEL_SIZE = 5
+RESIZE_FACTOR = .5
 VERTICES = np.array([[
     (0, 60),
     (80, 40),
@@ -23,7 +24,19 @@ def roi(img, vertices):
 
 
 def process_img(original_image):
-    gray_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
+    new_shape = (int(RESIZE_FACTOR*160), int(RESIZE_FACTOR*320))
+    image = cv2.resize(original_image, new_shape) 
+    ''' 
+    image = original_image / 255. - 0.5
+    image = cv2.resize(
+            image,
+            None,
+            fx=2,
+            fy=2,
+            interpolation=cv2.INTER_CUBIC
+    )
+    '''
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blur_gray = cv2.GaussianBlur(gray_image, (KERNEL_SIZE, KERNEL_SIZE), 0)
     edges = cv2.Canny(gray_image, 200, 300)
     masked_edges = roi(edges, [VERTICES])
@@ -43,7 +56,9 @@ def process_img(original_image):
         for x1,y1,x2,y2 in line:
             cv2.line(line_image, (x1,y1), (x2,y2), (255,255,255), 2)
 
-    processed_image = 255 - (line_image + edges)
+    processed_image = line_image + edges
+    processed_image = processed_image / 255.
+    gray_image = gray_image / 255. - 0.5
     return np.concatenate([
         np.expand_dims(processed_image, 2),
         np.expand_dims(gray_image, 2)

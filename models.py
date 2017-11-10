@@ -13,6 +13,8 @@ from keras.layers.advanced_activations import ELU
 from keras.optimizers import Adam
 from keras.regularizers import l2
 
+from image_preprocessing import RESIZE_FACTOR
+
 
 def get_simplest_model():
     model = Sequential()
@@ -105,27 +107,29 @@ def preprocess_img(original_image):
     return line_image + edges
 
 def get_lenet_model():
-    filter_sz = 7
-    num_filters = 24
+    filter_sz = 5
+    num_filters = 12
     padding='valid'
-    inp = Input(shape=(160, 320, 3))
+    shape = (int(RESIZE_FACTOR*160), int(RESIZE_FACTOR*320), 2)
+    inp = Input(shape)
     # x = Cropping2D(cropping=(70, 25), (0,0))
-    x = Conv2D(10, (5, 5), kernel_regularizer=l2(0.001))(inp)
+    x = Conv2D(num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(0.001))(inp)
     x = ELU()(x)
     x = MaxPooling2D(2, 2)(x)
-    x = Conv2D(20, (5, 5), kernel_regularizer=l2(0.001))(x)
+    x = Conv2D(2*num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(0.001))(x)
     x = ELU()(x)
     x = MaxPooling2D(2, 2)(x)
-    x = Conv2D(40, (5, 5), kernel_regularizer=l2(0.001))(x)
-    x = ELU()(x)
+    #x = Conv2D(4*num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(0.001))(x)
+    #x = ELU()(x)
     x = MaxPooling2D(2, 2)(x)
 
     print('Shape before Flatten: {}'.format(x))
     x = Flatten()(x)
-    x = Dense(256, kernel_regularizer=l2(0.001))(x)
-    x = Dropout(.5)(x)
     x = Dense(128, kernel_regularizer=l2(0.001))(x)
+    x = ELU()(x)
     x = Dropout(.5)(x)
+    x = Dense(64, kernel_regularizer=l2(0.001))(x)
+    x = ELU()(x)
     x = Dense(1)(x)
 
     return Model(inp, x)
@@ -137,8 +141,8 @@ if __name__ == '__main__':
     from read_data import get_data
     from image_preprocessing import process_img
     model = get_lenet_model()
-    X, y, filenames = get_data('data/default_set/')
-    X = np.array(list(map(process_img, X)))
+    X, y, filenames = get_data('data/default_set/', preprocessing=process_img)
+    print('Data in RAM')
     # X_flip, y_flip = np.flipr(X), -y
     # X = np.concatenate([X, X_flip])
     # y = np.concatenate([y, y_flip])
@@ -146,4 +150,4 @@ if __name__ == '__main__':
     model.compile(loss='mse',
                   optimizer=Adam(lr=1e-4),
                   metrics=['mse'])
-    model.fit(X, y, verbose=1, validation_split=0.05)
+    model.fit(X, y, epochs=20, verbose=1, validation_split=0.1)

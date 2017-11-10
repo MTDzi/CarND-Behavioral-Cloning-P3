@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib.pyplot import imread
 
 
-def get_data(path='data/default_set/', margin=.25):
+def get_data(path='data/default_set/', margin=.25, preprocessing=None):
     lines = []
     with open(path + 'driving_log.csv') as file_:
         reader = csv.reader(file_)
@@ -15,16 +15,17 @@ def get_data(path='data/default_set/', margin=.25):
     images = []
     measurements = []
     filenames = []
-    for line in lines:
+    for line in lines[:100]:
         # Reading images
         img_paths = list(map(
             lambda sub_path: os.path.join(path, str.strip(sub_path)),
             line[:3]
         ))
-        filenames.extend(img_paths)
-        # import ipdb; ipdb.set_trace()
+        #filenames.extend(img_paths)
         for img_path in img_paths:
             img = imread(img_path)
+            if preprocessing:
+                img = preprocessing(img)
             images.append(img)
 
         # Reading measurements
