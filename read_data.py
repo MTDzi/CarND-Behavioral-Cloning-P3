@@ -15,7 +15,7 @@ def get_data(path='data/default_set/', margin=.25, preprocessing=None):
     images = []
     measurements = []
     filenames = []
-    for line in lines[:100]:
+    for line in lines:
         # Reading images
         img_paths = list(map(
             lambda sub_path: os.path.join(path, str.strip(sub_path)),

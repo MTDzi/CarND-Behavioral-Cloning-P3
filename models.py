@@ -108,7 +108,7 @@ def preprocess_img(original_image):
 
 def get_lenet_model():
     filter_sz = 5
-    num_filters = 12
+    num_filters = 16
     padding='valid'
     shape = (int(RESIZE_FACTOR*160), int(RESIZE_FACTOR*320), 2)
     inp = Input(shape)
@@ -119,8 +119,8 @@ def get_lenet_model():
     x = Conv2D(2*num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(0.001))(x)
     x = ELU()(x)
     x = MaxPooling2D(2, 2)(x)
-    #x = Conv2D(4*num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(0.001))(x)
-    #x = ELU()(x)
+    x = Conv2D(4*num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(0.001))(x)
+    x = ELU()(x)
     x = MaxPooling2D(2, 2)(x)
 
     print('Shape before Flatten: {}'.format(x))
@@ -143,11 +143,11 @@ if __name__ == '__main__':
     model = get_lenet_model()
     X, y, filenames = get_data('data/default_set/', preprocessing=process_img)
     print('Data in RAM')
-    # X_flip, y_flip = np.flipr(X), -y
-    # X = np.concatenate([X, X_flip])
-    # y = np.concatenate([y, y_flip])
+    #X = np.concatenate([X, np.fliplr(X)])
+    #y = np.concatenate([y, -y])
 
     model.compile(loss='mse',
                   optimizer=Adam(lr=1e-4),
                   metrics=['mse'])
-    model.fit(X, y, epochs=20, verbose=1, validation_split=0.1)
+    model.fit(X, y, epochs=10, verbose=1, validation_split=0.1)
+    model.save('model.h5')
