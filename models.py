@@ -110,7 +110,7 @@ def get_lenet_model():
     filter_sz = 5
     num_filters = 10
     padding='valid'
-    shape = (int(RESIZE_FACTOR*160), int(RESIZE_FACTOR*320), 5)
+    shape = (int(RESIZE_FACTOR*160), int(RESIZE_FACTOR*320), 2)
     inp = Input(shape)
     # x = Cropping2D(cropping=(70, 25), (0,0))
     x = Conv2D(num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(0.001))(inp)
@@ -149,5 +149,5 @@ if __name__ == '__main__':
     model.compile(loss='mse',
                   optimizer=Adam(lr=1e-4),
                   metrics=['mse'])
-    model.fit(X, y, epochs=10, verbose=1, validation_split=0.1)
+    model.fit(X, y, epochs=20, verbose=1, validation_split=0.1)
     model.save('model.h5')
