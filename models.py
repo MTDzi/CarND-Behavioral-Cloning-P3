@@ -108,9 +108,9 @@ def preprocess_img(original_image):
 
 def get_lenet_model():
     filter_sz = 5
-    num_filters = 16
+    num_filters = 10
     padding='valid'
-    shape = (int(RESIZE_FACTOR*160), int(RESIZE_FACTOR*320), 2)
+    shape = (int(RESIZE_FACTOR*160), int(RESIZE_FACTOR*320), 5)
     inp = Input(shape)
     # x = Cropping2D(cropping=(70, 25), (0,0))
     x = Conv2D(num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(0.001))(inp)

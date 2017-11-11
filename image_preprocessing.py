@@ -37,8 +37,8 @@ def process_img(original_image):
     )
     '''
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    blur_gray = cv2.GaussianBlur(gray_image, (KERNEL_SIZE, KERNEL_SIZE), 0)
-    edges = cv2.Canny(gray_image, 200, 300)
+    #blur_gray = cv2.GaussianBlur(image, (KERNEL_SIZE, KERNEL_SIZE), 0)
+    edges = cv2.Canny(image, 10, 200)
     masked_edges = roi(edges, [VERTICES])
 
     rho = 1 # distance resolution in pixels of the Hough grid
@@ -52,14 +52,16 @@ def process_img(original_image):
     # Output "lines" is an array containing endpoints of detected line segments
     lines = cv2.HoughLinesP(masked_edges, rho, theta, threshold, np.array([]),
                             min_line_length, max_line_gap)
-    #for line in lines:
-    #    for x1,y1,x2,y2 in line:
-    #        cv2.line(line_image, (x1,y1), (x2,y2), (255,255,255), 2)
+    lines = [] if lines is None else lines
+    for line in lines:
+        for x1,y1,x2,y2 in line:
+            cv2.line(line_image, (x1,y1), (x2,y2), (255,255,255), 2)
 
     processed_image = line_image + edges
     processed_image = processed_image / 255.
     gray_image = gray_image / 255. - 0.5
     return np.concatenate([
         np.expand_dims(processed_image, 2),
-        np.expand_dims(gray_image, 2)
+        np.expand_dims(gray_image, 2),
+        image,
     ], 2)
