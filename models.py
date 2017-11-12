@@ -107,47 +107,76 @@ def preprocess_img(original_image):
     return line_image + edges
 
 def get_lenet_model():
+    reg = 1e-3
     filter_sz = 5
-    num_filters = 10
+    num_filters = 16
     padding='valid'
-    shape = (int(RESIZE_FACTOR*160), int(RESIZE_FACTOR*320), 2)
+    shape = (int(RESIZE_FACTOR*110), int(RESIZE_FACTOR*320), 2)
     inp = Input(shape)
     # x = Cropping2D(cropping=(70, 25), (0,0))
-    x = Conv2D(num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(0.001))(inp)
+    x = Conv2D(num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(reg))(inp)
     x = ELU()(x)
     x = MaxPooling2D(2, 2)(x)
-    x = Conv2D(2*num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(0.001))(x)
+    x = Conv2D(2*num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(reg))(x)
     x = ELU()(x)
     x = MaxPooling2D(2, 2)(x)
-    x = Conv2D(4*num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(0.001))(x)
+    x = Conv2D(4*num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(reg))(x)
     x = ELU()(x)
     x = MaxPooling2D(2, 2)(x)
+    #x = Conv2D(8*num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(reg))(x)
+    #x = ELU()(x)
+    #x = MaxPooling2D(2, 2)(x)
 
     print('Shape before Flatten: {}'.format(x))
     x = Flatten()(x)
-    x = Dense(128, kernel_regularizer=l2(0.001))(x)
+    x = Dense(128, kernel_regularizer=l2(reg))(x)
     x = ELU()(x)
     x = Dropout(.5)(x)
-    x = Dense(64, kernel_regularizer=l2(0.001))(x)
+    x = Dense(64, kernel_regularizer=l2(reg))(x)
     x = ELU()(x)
     x = Dense(1)(x)
 
     return Model(inp, x)
 
 
+def batcher(gen, batch_size=32):
+    while True:
+        X = []
+        Y = []
+        for i in range(batch_size):
+            x, y = next(gen)
+            X.append(x)
+            Y.append(y)
+        yield np.array(X), np.array(Y)
+
 
 
 if __name__ == '__main__':
-    from read_data import get_data
+    from read_data import get_data, get_data_gen
     from image_preprocessing import process_img
-    model = get_lenet_model()
-    X, y, filenames = get_data('data/default_set/', preprocessing=process_img)
+    data_filepath = 'data/default_set/'
+    #X, y, filenames = get_data(data_filepath, preprocessing=process_img)
     print('Data in RAM')
     #X = np.concatenate([X, np.fliplr(X)])
     #y = np.concatenate([y, -y])
 
+    model = get_lenet_model()
     model.compile(loss='mse',
                   optimizer=Adam(lr=1e-4),
                   metrics=['mse'])
-    model.fit(X, y, epochs=20, verbose=1, validation_split=0.1)
+    #model.fit(X, y, epochs=20, verbose=1, validation_split=0.01)
+    batch_sz = 32
+    epoch_sz = 24000
+    train_gen = get_data_gen(data_filepath, preprocessing=process_img, flip_prob=0)
+    train_batch_gen = batcher(train_gen, batch_size=batch_sz)
+    valid_gen = get_data_gen(data_filepath, preprocessing=process_img, validation=True, flip_prob=0)
+    valid_batch_gen = batcher(valid_gen, batch_size=batch_sz)
+    model.fit_generator(
+            train_batch_gen,
+            steps_per_epoch=epoch_sz//batch_sz,
+            epochs=15,
+            use_multiprocessing=True,
+            validation_data=valid_batch_gen,
+            validation_steps=200,
+    )
     model.save('model.h5')

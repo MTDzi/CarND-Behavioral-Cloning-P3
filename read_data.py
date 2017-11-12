@@ -4,14 +4,13 @@ import numpy as np
 from matplotlib.pyplot import imread
 
 
-def get_data(path='data/default_set/', margin=.25, preprocessing=None):
+def get_data(path='data/default_set/', margin=.35, preprocessing=None):
     lines = []
     with open(path + 'driving_log.csv') as file_:
         reader = csv.reader(file_)
         header = next(reader)
         for line in reader:
             lines.append(line)
-
     images = []
     measurements = []
     filenames = []
@@ -37,6 +36,43 @@ def get_data(path='data/default_set/', margin=.25, preprocessing=None):
     y_train = np.array(measurements)
 
     return X_train, y_train, filenames
+
+
+
+def get_data_gen(path='data/default_set/', margin=.35, preprocessing=None, flip_prob=.5, val_part=100, validation=False):
+    lines = []
+    with open(path + 'driving_log.csv') as file_:
+        reader = csv.reader(file_)
+        header = next(reader)
+        for line in reader:
+            lines.append(line)
+
+    #np.random.seed(42)
+    #np.random.shuffle(lines)
+    while True:
+        for line in lines:
+            images = []
+            is_for_val = (hash(line[0]) % val_part != 0)
+            if is_for_val:
+                if not validation:
+                    continue
+            else:
+                if validation:
+                    continue
+
+            # Reading one image
+            index = np.random.randint(0, 3)
+            image = imread(os.path.join(path, str.strip(line[index])))
+            if preprocessing:
+                image = preprocessing(image)
+
+            # Reading measurements
+            center_angle = float(line[3])
+            angles = [center_angle, center_angle+margin, center_angle-margin]
+            angle = angles[index]
+            if np.random.rand() > flip_prob:
+                image, angle = np.fliplr(image), -angle
+            yield image, angle
 
 
 if __name__ == '__main__':
