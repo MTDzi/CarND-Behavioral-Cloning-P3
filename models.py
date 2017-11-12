@@ -112,7 +112,7 @@ def get_lenet_model():
     num_filters = 16
     padding='valid'
 
-    inp_shape = (int(RESIZE_FACTOR*110), int(RESIZE_FACTOR*320), 3)
+    inp_shape = (int(RESIZE_FACTOR*110), int(RESIZE_FACTOR*320), 2)
     inp = Input(inp_shape)
     x = Conv2D(num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(reg))(inp)
     x = ELU()(x)
@@ -166,7 +166,7 @@ if __name__ == '__main__':
     model.fit(X, y, epochs=20, verbose=1, validation_split=0.01)'''
     batch_sz = 32
     epoch_sz = 24000
-    train_gen = get_data_gen(data_filepath, preprocessing=process_img, flip_prob=0, drop_angle_0_prob=0.5)
+    train_gen = get_data_gen(data_filepath, preprocessing=process_img, flip_prob=0.2, drop_angle_0_prob=0.5)
     train_batch_gen = batcher(train_gen, batch_size=batch_sz)
     valid_gen = get_data_gen(data_filepath, preprocessing=process_img, validation=True, flip_prob=0, drop_angle_0_prob=0)
     valid_batch_gen = batcher(valid_gen, batch_size=batch_sz)
