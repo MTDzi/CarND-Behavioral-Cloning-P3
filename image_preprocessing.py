@@ -27,6 +27,8 @@ def roi(img, vertices):
 def process_img(original_image):
     image = original_image[50:]
     image = scipy.misc.imresize(image, RESIZE_FACTOR)
+    image = image / 255. - 0.5
+    return image
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(image, 10, 200)
     

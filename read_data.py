@@ -39,7 +39,7 @@ def get_data(path='data/default_set/', margin=.35, preprocessing=None):
 
 
 
-def get_data_gen(path='data/default_set/', margin=.35, preprocessing=None, flip_prob=.5, val_part=100, validation=False):
+def get_data_gen(path='data/default_set/', margin=.35, preprocessing=None, flip_prob=.5, val_part=100, validation=False, drop_angle_0_prob=0):
     lines = []
     with open(path + 'driving_log.csv') as file_:
         reader = csv.reader(file_)
@@ -47,9 +47,9 @@ def get_data_gen(path='data/default_set/', margin=.35, preprocessing=None, flip_
         for line in reader:
             lines.append(line)
 
-    #np.random.seed(42)
-    #np.random.shuffle(lines)
+    np.random.seed(42)
     while True:
+        np.random.shuffle(lines)
         for line in lines:
             images = []
             is_for_val = (hash(line[0]) % val_part != 0)
@@ -60,17 +60,20 @@ def get_data_gen(path='data/default_set/', margin=.35, preprocessing=None, flip_
                 if validation:
                     continue
 
-            # Reading one image
             index = np.random.randint(0, 3)
+            center_angle = float(line[3])
+            if index == 0 and center_angle == 0 and np.random.rand() < drop_angle_0_prob:
+                continue
+
+            angles = [center_angle, center_angle+margin, center_angle-margin]
+            angle = angles[index]
+           
+            # Reading one image
             image = imread(os.path.join(path, str.strip(line[index])))
             if preprocessing:
                 image = preprocessing(image)
 
-            # Reading measurements
-            center_angle = float(line[3])
-            angles = [center_angle, center_angle+margin, center_angle-margin]
-            angle = angles[index]
-            if np.random.rand() > flip_prob:
+            if np.random.rand() < flip_prob:
                 image, angle = np.fliplr(image), -angle
             yield image, angle
 
