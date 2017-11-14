@@ -51,8 +51,9 @@ def process_img(original_image):
     '''
     processed_image = processed_image / 255.
     gray_image = gray_image / 255. - 0.5
+    image = image / 255. - 0.5
+    return image
     return np.concatenate([
         np.expand_dims(processed_image, 2),
         np.expand_dims(gray_image, 2),
-        #image,
     ], 2)

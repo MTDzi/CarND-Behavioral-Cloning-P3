@@ -126,14 +126,47 @@ def get_lenet_model():
 
     print('Shape before Flatten: {}'.format(x))
     x = Flatten()(x)
-    x = Dense(128, kernel_regularizer=l2(reg))(x)
+    x = Dense(100, kernel_regularizer=l2(reg))(x)
     x = ELU()(x)
-    x = Dropout(.5)(x)
-    x = Dense(64, kernel_regularizer=l2(reg))(x)
+    #x = Dropout(.5)(x)
+    x = Dense(50, kernel_regularizer=l2(reg))(x)
+    x = ELU()(x)
+    x = Dense(10, kernel_regularizer=l2(reg))(x)
     x = ELU()(x)
     x = Dense(1)(x)
 
     return Model(inp, x)
+
+
+def get_nvidia_model():
+    reg = 1e-3
+    inp_shape = (int(RESIZE_FACTOR*110), int(RESIZE_FACTOR*320), 3)
+    inp = Input(inp_shape)
+
+    x = Conv2D(24, (5,5), strides=(2,2), padding='same', kernel_regularizer=l2(reg))(inp)
+    x = ELU()(x)
+    x = Conv2D(36, (5,5), strides=(2,2), padding='same', kernel_regularizer=l2(reg))(x)
+    x = ELU()(x)
+    x = Conv2D(48, (5,5), strides=(2,2), padding='same', kernel_regularizer=l2(reg))(x)
+    x = ELU()(x)
+
+    x = Conv2D(64, (3,3), kernel_regularizer=l2(reg))(x)
+    x = ELU()(x)
+    x = Conv2D(64, (3,3), kernel_regularizer=l2(reg))(x)
+    x = ELU()(x)
+
+    x = Flatten()(x)
+    x = Dense(100, kernel_regularizer=l2(reg))(x)
+    x = ELU()(x)
+    x = Dense(50, kernel_regularizer=l2(reg))(x)
+    x = ELU()(x)
+    x = Dense(10, kernel_regularizer=l2(reg))(x)
+    x = ELU()(x)
+    x = Dense(1)(x)
+
+    return Model(inp, x)
+
+
 
 
 def batcher(gen, batch_size=32):
@@ -151,9 +184,10 @@ def batcher(gen, batch_size=32):
 if __name__ == '__main__':
     from read_data import get_data, get_data_gen
     from image_preprocessing import process_img
-    data_filepath = 'data/larger_set/'
+    data_filepath = 'data/largest_set/'
 
-    model = get_lenet_model()
+    #model = get_lenet_model()
+    model = get_nvidia_model()
     model.compile(loss='mse',
                   optimizer=Adam(lr=1e-4),
                   metrics=['mse'])
@@ -165,10 +199,10 @@ if __name__ == '__main__':
     #y = np.concatenate([y, -y])
     model.fit(X, y, epochs=20, verbose=1, validation_split=0.01)'''
     batch_sz = 32
-    epoch_sz = 24000
-    train_gen = get_data_gen(data_filepath, preprocessing=process_img, flip_prob=0.2, drop_angle_0_prob=0.5)
+    epoch_sz = 48000
+    train_gen = get_data_gen(data_filepath, preprocessing=process_img, flip_prob=0.25, drop_angle_0_prob=0.5)
     train_batch_gen = batcher(train_gen, batch_size=batch_sz)
-    valid_gen = get_data_gen(data_filepath, preprocessing=process_img, validation=True, flip_prob=0, drop_angle_0_prob=0)
+    valid_gen = get_data_gen(data_filepath, preprocessing=process_img, validation=True, flip_prob=0.25, drop_angle_0_prob=0)
     valid_batch_gen = batcher(valid_gen, batch_size=batch_sz)
     model.fit_generator(
             train_batch_gen,

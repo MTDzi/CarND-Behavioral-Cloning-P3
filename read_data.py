@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib.pyplot import imread
 
 
-def get_data(path='data/default_set/', margin=.35, preprocessing=None):
+def get_data(path='data/default_set/', margin=.25, preprocessing=None):
     lines = []
     with open(path + 'driving_log.csv') as file_:
         reader = csv.reader(file_)
