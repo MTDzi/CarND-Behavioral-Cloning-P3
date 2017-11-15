@@ -47,11 +47,14 @@ def get_data_gen(path='data/default_set/', margin=.35, preprocessing=None, flip_
         for line in reader:
             lines.append(line)
 
-    np.random.seed(42)
+    if not validation:
+        import ipdb; ipdb.set_trace()
+        print('Num lines: {}'.format(len(lines)))
+
+    np.random.seed(41)
     while True:
         np.random.shuffle(lines)
         for line in lines:
-            images = []
             is_for_val = (hash(line[0]) % val_part != 0)
             if is_for_val:
                 if not validation:
@@ -60,15 +63,17 @@ def get_data_gen(path='data/default_set/', margin=.35, preprocessing=None, flip_
                 if validation:
                     continue
 
-            index = np.random.randint(0, 3)
-            center_angle = float(line[3])
-            if index == 0 and center_angle == 0 and np.random.rand() < drop_angle_0_prob:
-                continue
+            if validation:
+                index = 0
+            else:
+                index = np.random.randint(0, 3)
 
+            center_angle = float(line[3])
+            if not validation and index == 0 and center_angle == 0 and np.random.rand() < drop_angle_0_prob:
+                continue
             angles = [center_angle, center_angle+margin, center_angle-margin]
             angle = angles[index]
            
-            # Reading one image
             image = imread(os.path.join(path, str.strip(line[index])))
             if preprocessing:
                 image = preprocessing(image)
@@ -76,7 +81,6 @@ def get_data_gen(path='data/default_set/', margin=.35, preprocessing=None, flip_
             if np.random.rand() < flip_prob:
                 image, angle = np.fliplr(image), -angle
             yield image, angle
-
 
 if __name__ == '__main__':
     X, y, filenames = get_data(path='mini_data/default_set/')
