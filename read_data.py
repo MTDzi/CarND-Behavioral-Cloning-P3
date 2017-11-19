@@ -4,42 +4,8 @@ import numpy as np
 from matplotlib.pyplot import imread
 
 
-def get_data(path='data/default_set/', margin=.25, preprocessing=None):
-    lines = []
-    with open(path + 'driving_log.csv') as file_:
-        reader = csv.reader(file_)
-        header = next(reader)
-        for line in reader:
-            lines.append(line)
-    images = []
-    measurements = []
-    filenames = []
-    for line in lines:
-        # Reading images
-        img_paths = list(map(
-            lambda sub_path: os.path.join(path, str.strip(sub_path)),
-            line[:3]
-        ))
-        #filenames.extend(img_paths)
-        for img_path in img_paths:
-            img = imread(img_path)
-            if preprocessing:
-                img = preprocessing(img)
-            images.append(img)
 
-        # Reading measurements
-        center_angle = float(line[3])
-        angles = [center_angle, center_angle+margin, center_angle-margin]
-        measurements.extend(angles)
-
-    X_train = np.array(images)
-    y_train = np.array(measurements)
-
-    return X_train, y_train, filenames
-
-
-
-def get_data_gen(path='data/default_set/', margin=.35, preprocessing=None, flip_prob=.5, val_part=100, validation=False, drop_angle_0_prob=0):
+def get_data_gen(path='data/default_set/', margin=.1, preprocessing=None, flip_prob=.5, val_part=100, validation=False, drop_angle_0_prob=0):
     lines = []
     with open(path + 'driving_log.csv') as file_:
         reader = csv.reader(file_)
@@ -48,10 +14,9 @@ def get_data_gen(path='data/default_set/', margin=.35, preprocessing=None, flip_
             lines.append(line)
 
     if not validation:
-        import ipdb; ipdb.set_trace()
         print('Num lines: {}'.format(len(lines)))
 
-    np.random.seed(41)
+    np.random.seed(42)
     while True:
         np.random.shuffle(lines)
         for line in lines:
@@ -66,7 +31,7 @@ def get_data_gen(path='data/default_set/', margin=.35, preprocessing=None, flip_
             if validation:
                 index = 0
             else:
-                index = np.random.randint(0, 3)
+                index = np.random.choice([0,1,2], p=[.5,.25,.25])
 
             center_angle = float(line[3])
             if not validation and index == 0 and center_angle == 0 and np.random.rand() < drop_angle_0_prob:
@@ -81,6 +46,7 @@ def get_data_gen(path='data/default_set/', margin=.35, preprocessing=None, flip_
             if np.random.rand() < flip_prob:
                 image, angle = np.fliplr(image), -angle
             yield image, angle
+
 
 if __name__ == '__main__':
     X, y, filenames = get_data(path='mini_data/default_set/')
