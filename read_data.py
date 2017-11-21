@@ -5,8 +5,7 @@ import pandas as pd
 from matplotlib.pyplot import imread
 
 
-
-def get_data_gen(path='data/default_set/', margin=.25, preprocessing=None, flip_prob=.5, val_part=100, validation=False):
+def get_data_gen(path='data/default_set/', margin=.25, flip_prob=.5, val_part=100, validation=False):
     lines = []
     with open(path + 'driving_log.csv') as file_:
         reader = csv.reader(file_)
@@ -14,7 +13,6 @@ def get_data_gen(path='data/default_set/', margin=.25, preprocessing=None, flip_
         for line in reader:
             lines.append(line)
 
-    import ipdb; ipdb.set_trace()
     if not validation:
         print('Num lines: {}'.format(len(lines)))
 
@@ -44,8 +42,7 @@ def get_data_gen(path='data/default_set/', margin=.25, preprocessing=None, flip_
             angle = angles[index]
 
             image = imread(os.path.join(path, str.strip(line[index])))
-            if preprocessing:
-                image = preprocessing(image)
+            image = preprocessing(image)
 
             if np.random.rand() < flip_prob:
                 image, angle = np.fliplr(image), -angle
