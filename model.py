@@ -74,14 +74,16 @@ def get_lenet_on_steroids_model():
 
     return Model(inp, x)
 
-def get_lenet_model():
+def get_lenet_like_model():
     reg = 1e-3
     filter_sz = 5
     num_filters = 16
 
     inp_shape = (int(RESIZE_FACTOR*110), int(RESIZE_FACTOR*320), 3)
     inp = Input(inp_shape)
+
     x = Conv2D(4, (1, 1), kernel_regularizer=l2(reg))(inp)
+    
     x = Conv2D(num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(reg))(x)
     x = MaxPooling2D(2, 2)(x)
     x = ELU()(x)
@@ -139,36 +141,36 @@ def get_nvidia_model():
 
 
 
-def batcher(gen, batch_size):
-    while True:
-        X = []
-        Y = []
-        for i in range(batch_size):
-            x, y = next(gen)
-            if np.abs(y) > 2:
-                import ipdb; ipdb.set_trace()
-            X.append(x)
-            Y.append(y)
-        yield np.array(X), np.array(Y)
+
 
 
 
 if __name__ == '__main__':
-    from read_data import get_data_gen
+    from read_data import get_data_gen, batcher
     from image_preprocessing import process_img
     data_filepath = 'data/new_data/'
 
-    #model = get_lenet_model()
-    model = get_lenet_on_steroids_model()
-    #model = get_nvidia_model()
+    # Surprisingly, my best model was the "LeNet like model" (my own design)
+    model = get_lenet_like_model()
+    # model = get_lenet_on_steroids_model()
+    # model = get_nvidia_model()
     model.compile(loss='mse',
                   optimizer=Adam(lr=1e-4),
                   metrics=['mse'])
     batch_sz = 32
     epoch_sz = 60000
-    train_gen = get_data_gen(data_filepath, preprocessing=process_img, flip_prob=0.25)
+    train_gen = get_data_gen(
+        data_filepath,
+        preprocessing=process_img,
+        flip_prob=0.25
+    )
     train_batch_gen = batcher(train_gen, batch_sz)
-    valid_gen = get_data_gen(data_filepath, preprocessing=process_img, validation=True, flip_prob=0.0)
+    valid_gen = get_data_gen(
+        data_filepath,
+        preprocessing=process_img,
+        validation=True,
+        flip_prob=0.0
+    )
     valid_batch_gen = batcher(valid_gen, batch_sz)
 
     # Initialize generators
@@ -182,7 +184,7 @@ if __name__ == '__main__':
             use_multiprocessing=True,
             validation_data=valid_batch_gen,
             validation_steps=300,
-    ) 
+    )
     model.save('model0.h5')
 
     batch_sz = 2*batch_sz
@@ -194,7 +196,7 @@ if __name__ == '__main__':
             use_multiprocessing=True,
             validation_data=valid_batch_gen,
             validation_steps=300,
-    ) 
+    )
     model.save('model1.h5')
 
     model.fit_generator(
@@ -204,7 +206,7 @@ if __name__ == '__main__':
             use_multiprocessing=True,
             validation_data=valid_batch_gen,
             validation_steps=300,
-    ) 
+    )
     model.save('model2.h5')
 
     model.fit_generator(
@@ -214,5 +216,5 @@ if __name__ == '__main__':
             use_multiprocessing=True,
             validation_data=valid_batch_gen,
             validation_steps=300,
-    ) 
+    )
     model.save('model3.h5')

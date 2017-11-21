@@ -52,5 +52,14 @@ def get_data_gen(path='data/default_set/', margin=.25, preprocessing=None, flip_
             yield image, angle
 
 
-if __name__ == '__main__':
-    X, y, filenames = get_data_gen(path='data/default_set/')
+def batcher(gen, batch_size):
+    while True:
+        X = []
+        Y = []
+        for i in range(batch_size):
+            x, y = next(gen)
+            if np.abs(y) > 2:
+                import ipdb; ipdb.set_trace()
+            X.append(x)
+            Y.append(y)
+        yield np.array(X), np.array(Y)

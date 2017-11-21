@@ -1,4 +1,4 @@
-#**Behavioral Cloning Project**
+# **Behavioral Cloning Project**
 
 The goals / steps of this project are the following:
 * Use the simulator to collect data of good driving behavior
@@ -10,114 +10,96 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1]: ./examples/placeholder.png "Model Visualization"
-[image2]: ./examples/placeholder.png "Grayscaling"
-[image3]: ./examples/placeholder_small.png "Recovery Image"
-[image4]: ./examples/placeholder_small.png "Recovery Image"
-[image5]: ./examples/placeholder_small.png "Recovery Image"
-[image6]: ./examples/placeholder_small.png "Normal Image"
-[image7]: ./examples/placeholder_small.png "Flipped Image"
+[image0]: ./model_summary.png "Output from `model.summary()`"
+[image1]: ./center.jpg "Center Image"
+[image2]: ./recovery_1.jpg "Recovery Image 1"
+[image3]: ./recovery_2.jpg "Recovery Image 2"
+[image4]: ./recovery_3.jpg "Recovery Image 3"
+[image5]: ./examples/placeholder_small.png "Flipped Image"
 
 ## Rubric Points
-###Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
+### Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
 
 ---
-###Files Submitted & Code Quality
+### Files Submitted & Code Quality
 
-####1. Submission includes all required files and can be used to run the simulator in autonomous mode
-
+#### 1. Submission includes all required files and can be used to run the simulator in autonomous mode
 My project includes the following files:
-* model.py containing the script to create and train the model
-* drive.py for driving the car in autonomous mode
-* model.h5 containing a trained convolution neural network
-* writeup_report.md or writeup_report.pdf summarizing the results
+* `model.py` containing the script to create and train the model
+* `drive.py` for driving the car in autonomous mode
+* `model.h5` containing a trained convolution neural network
+* `writeup_report.md` summarizing the results
 
-####2. Submission includes functional code
-Using the Udacity provided simulator and my drive.py file, the car can be driven autonomously around the track by executing
+#### 2. Submission includes functional code
+Using the Udacity provided simulator and the `drive.py` file, the car can be driven autonomously around the track by executing:
 ```sh
 python drive.py model.h5
 ```
 
-####3. Submission code is usable and readable
+#### 3. Submission code is usable and readable
+The `model.py` file contains the code for training and saving the convolutional neural network. The file shows the pipeline I used for training and validating the model, and it contains comments to explain how the code works.
 
-The model.py file contains the code for training and saving the convolutional neural network. The file shows the pipeline I used for training and validating the model, and it contains comments to explain how the code works.
 
-###Model Architecture and Training Strategy
+### Model Architecture and Training Strategy
+#### 1. An appropriate model architecture has been employed
+My model is an extension of the LeNet model, I call it "LeNet like model". The model is produced by the `get_lenet_like_model` function (lines 77-110).
+The model starts with a 1x1 convolution (with 4 filters), which amounts to a feature map consisting of 4 "maps", each being a linear combination of the input RGB image.
 
-####1. An appropriate model architecture has been employed
+Next, there are three consecutive (5x5 convolution + max pooling + ELU activation) modules, similar to what can be found in the actual LeNet model. The number of filters in these modules are: 16, 32, and 16.
 
-My model is an extension of the LeNet model.
+These modules are followed by a flatten operation, and dropout (all dropout operations had a `keep_prob` of 0.5), next followed be a fully connected (FC) layer with 256 neurons, followed by an FC layer of 128 neurons, followed be an FC layer of 64 neurons, and finalized be a single regression neuron at the end.
 
-My model consists of a convolution neural network with 3x3 filter sizes and depths between 32 and 128 (model.py lines 18-24)
+Here is a visualization of the architecture:
 
-The model includes RELU layers to introduce nonlinearity (code line 20). For image normalization, I used the `image...``
+![alt text][image0]
 
-####2. Attempts to reduce overfitting in the model
+#### 2. Attempts to reduce overfitting in the model
+The model contains dropout layers in order to reduce overfitting (`model.py` lines 98, 101, and 104), but also I used weight decay in all layers of the net (with a coefficient of *1e-3*).
 
-The model contains dropout layers in order to reduce overfitting (model.py lines 21).
+The model was trained and validated on disjoint parts of the whole data sets to ensure that the model was not overfitting (code line 25 in `read_data.py`). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
 
-The model was trained and validated on disjoint parts of the whole data sets to ensure that the model was not overfitting (code line ...). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
+#### 3. Model parameter tuning
+I used an ADAM optimizer, so the learning rate was not tuned manually (`model.py` line 25), but with an initial learning rate of *1e-4*.
 
-####3. Model parameter tuning
-
-The model used an ADAM optimizer, so the learning rate was not tuned manually (model.py line 25), but with an initial learning rate of `1e-4`.
-
-####4. Appropriate training data
-
+#### 4. Appropriate training data
 Training data was chosen to keep the vehicle driving on the road. I used a combination of center lane driving, recovering from the left and right sides of the road. In particular, because I struggled A LOT with the left turn right after the bridge, I took that turn numerous (20+) times.
 
 For details about how I created the training data, see the next section.
 
-###Model Architecture and Training Strategy
 
-####1. Solution Design Approach
+### Model Architecture and Training Strategy
+#### 1. Solution Design Approach
+The overall strategy for deriving a model architecture was to start with the standard LeNet architecture, then increase the complexity (to get a very low MSE on the training data, approximately *0.002*, even at the cost of high MSE on validation), and then add regularization to get a low error on the validation set.
+I've started with dropout, experimented with BatchNorm (but it didn't improve the validation error), and used weight decay throughout the network.
 
-The overall strategy for deriving a model architecture was to ...
+I've also experimented with other architectures (all defined in the `model.py` script), most notably, with the NVIDIA architecture. I was able to get comparable, and/or better results (depending on the set up) on the validation set, but not in terms of how the model drove the car in autonomous mode.
 
-My first step was to use a convolution neural network model similar to the ... I thought this model might be appropriate because ...
+To combat overfitting, I used various additions to the model (already mentioned above), but also, I randomly flipped the images horizontally (with a probability of *0.25*).
 
-In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model had a low mean squared error on the training set but a high mean squared error on the validation set. This implied that the model was overfitting.
-
-To combat the overfitting, I modified the model so that ...
-
-Then I ...
-
-The final step was to run the simulator to see how well the car was driving around track one. There were a few spots where the vehicle fell off the track... to improve the driving behavior in these cases, I ....
+The final step was to run the simulator to see how well the car was driving around track one. There were a few spots where the vehicle fell off the track -- in particular the first turn after the bridge. To improve the driving behavior in these cases, I recorded taking that turn many times, but what eventually proved most useful was the 1x1 convolution transforming the RGB image into a 4-dimensional feature map. This way the model was able to identify the muddy track as a "no-go" (at least that's my interpretation).
 
 At the end of the process, the vehicle is able to drive autonomously around the track without leaving the road.
 
-####2. Final Model Architecture
 
-The final model architecture (model.py lines 18-24) consisted of a convolution neural network with the following layers and layer sizes ...
-
-Here is a visualization of the architecture (note: visualizing the architecture is optional according to the project rubric)
+#### 2. Creation of the Training Set & Training Process
+To capture good driving behavior, I first recorded four laps on track one using center lane driving. Here is an example image of center lane driving:
 
 ![alt text][image1]
 
-####3. Creation of the Training Set & Training Process
-
-To capture good driving behavior, I first recorded two laps on track one using center lane driving. Here is an example image of center lane driving:
+I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to recover from critical situations. These images show what a recovery looks like starting from:
 
 ![alt text][image2]
-
-I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to .... These images show what a recovery looks like starting from ... :
-
 ![alt text][image3]
 ![alt text][image4]
+
+I did NOT collect data on track two, I wanted to stick to track 1, and perhaps attack track 2 on some other occasion.
+
+To augment the data sat, I also flipped images horizontally, thinking that this would allow the model to better generalize, rather than identify artifacts pertinent only to certain turns. For example, here is an image that has been flipped:
+
+![alt text][image1]
 ![alt text][image5]
 
-Then I repeated this process on track two in order to get more data points.
+After the collection process, I had 3 x 60.000 = 180.000 of data points (the "3 x" comes from the fact that for each position of the car I took images from: center, left, and right).  I also cropped 50 rows of the image array from the top, which resulted in a tensor of shape: (110, 320, 3). I then
+Finally,
 
-To augment the data sat, I also flipped images and angles thinking that this would ... For example, here is an image that has then been flipped:
-
-![alt text][image6]
-![alt text][image7]
-
-Etc ....
-
-After the collection process, I had X number of data points. I then preprocessed this data by ...
-
-
-I finally randomly shuffled the data set and put Y% of the data into a validation set.
-
-I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was Z as evidenced by ... I used an adam optimizer so that manually training the learning rate wasn't necessary.
+I finally randomly shuffled the data set and put 1% of the data into a validation set. I used this training data for training the model. The validation set helped determine if the model was (over/under)fitting. The ideal number of epochs was 10, I used an ADAM optimizer so that manually training the learning rate wasn't necessary.
