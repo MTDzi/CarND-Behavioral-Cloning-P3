@@ -5,7 +5,7 @@ from matplotlib.pyplot import imread
 
 
 
-def get_data_gen(path='data/default_set/', margin=.25, preprocessing=None, flip_prob=.5, val_part=100, validation=False, drop_angle_0_prob=0):
+def get_data_gen(path='data/default_set/', margin=.25, preprocessing=None, flip_prob=.5, val_part=100, validation=False):
     lines = []
     with open(path + 'driving_log.csv') as file_:
         reader = csv.reader(file_)
@@ -35,9 +35,6 @@ def get_data_gen(path='data/default_set/', margin=.25, preprocessing=None, flip_
                 index = np.random.choice([0,1,2], p=[1-2*p,p,p])
 
             center_angle = float(line[3])
-            if not validation and index == 0 and center_angle == 0 and np.random.rand() < drop_angle_0_prob:
-                continue
-
             if not validation and np.random.rand() > np.abs(center_angle):
                 continue
 
