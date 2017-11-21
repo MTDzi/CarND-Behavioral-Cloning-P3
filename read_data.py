@@ -1,6 +1,7 @@
 import os
 import csv
 import numpy as np
+import pandas as pd
 from matplotlib.pyplot import imread
 
 
@@ -13,6 +14,7 @@ def get_data_gen(path='data/default_set/', margin=.1, preprocessing=None, flip_p
         for line in reader:
             lines.append(line)
 
+    import ipdb; ipdb.set_trace()
     if not validation:
         print('Num lines: {}'.format(len(lines)))
 
@@ -38,7 +40,7 @@ def get_data_gen(path='data/default_set/', margin=.1, preprocessing=None, flip_p
                 continue
             angles = [center_angle, center_angle+margin, center_angle-margin]
             angle = angles[index]
-           
+
             image = imread(os.path.join(path, str.strip(line[index])))
             if preprocessing:
                 image = preprocessing(image)
@@ -49,4 +51,4 @@ def get_data_gen(path='data/default_set/', margin=.1, preprocessing=None, flip_p
 
 
 if __name__ == '__main__':
-    X, y, filenames = get_data(path='mini_data/default_set/')
+    X, y, filenames = get_data_gen(path='data/default_set/')
