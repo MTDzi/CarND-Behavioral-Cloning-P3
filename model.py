@@ -1,27 +1,14 @@
 import numpy as np
-import cv2
 
 import keras
-from keras import backend as K
-from keras import applications
-from keras.preprocessing.image import ImageDataGenerator
-from keras import optimizers
 from keras.models import Sequential, Model
 from keras.layers import Dropout, Flatten, Dense, Input, Lambda, Conv2D, Cropping2D, BatchNormalization
 from keras.layers.pooling import MaxPooling2D
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler, TensorBoard, EarlyStopping
 from keras.layers.advanced_activations import ELU
 from keras.optimizers import Adam
 from keras.regularizers import l2
 
 from image_preprocessing import RESIZE_FACTOR
-
-
-def get_simplest_model():
-    model = Sequential()
-    model.add(Flatten(input_shape=(160, 320, 3)))
-    model.add(Dense(1))
-    return model
 
 
 def get_lenet_on_steroids_model():
@@ -83,7 +70,7 @@ def get_lenet_like_model():
     inp = Input(inp_shape)
 
     x = Conv2D(4, (1, 1), kernel_regularizer=l2(reg))(inp)
-    
+
     x = Conv2D(num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(reg))(x)
     x = MaxPooling2D(2, 2)(x)
     x = ELU()(x)
@@ -139,7 +126,40 @@ def get_nvidia_model():
     return Model(inp, x)
 
 
+def get_experiment():
+    reg = 1e-3
+    filter_sz = 5
+    num_filters = 16
 
+    inp_shape = (int(RESIZE_FACTOR*110), int(RESIZE_FACTOR*320), 3)
+    inp = Input(inp_shape)
+
+    x = Conv2D(4, (1, 1), kernel_regularizer=l2(reg))(inp)
+
+    x = Conv2D(num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(reg))(x)
+    x = MaxPooling2D(2, 2)(x)
+    x = ELU()(x)
+    x = Conv2D(2*num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(reg))(x)
+    x = MaxPooling2D(2, 2)(x)
+    x = ELU()(x)
+    x = Conv2D(4*num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(reg))(x)
+    x = MaxPooling2D(2, 2)(x)
+    x = ELU()(x)
+
+    print('Shape before Flatten: {}'.format(x))
+    x = Dropout(.5)(x)
+    x = Flatten()(x)
+    x = Dense(256, kernel_regularizer=l2(reg))(x)
+    x = Dropout(.5)(x)
+    x = ELU()(x)
+    x = Dense(128, kernel_regularizer=l2(reg))(x)
+    x = Dropout(.5)(x)
+    x = ELU()(x)
+    x = Dense(64, kernel_regularizer=l2(reg))(x)
+    x = ELU()(x)
+    x = Dense(3, activation='softmax', kernel_regularizer=l2(reg))(x)
+
+    return Model(inp, x)
 
 
 
@@ -151,23 +171,21 @@ if __name__ == '__main__':
     data_filepath = 'data/new_data/'
 
     # Surprisingly, my best model was the "LeNet like model" (my own design)
-    model = get_lenet_like_model()
-    # model = get_lenet_on_steroids_model()
-    # model = get_nvidia_model()
+    # model = get_lenet_like_model()
+    model = get_experiment()
     model.compile(loss='mse',
                   optimizer=Adam(lr=1e-4),
                   metrics=['mse'])
+
     batch_sz = 32
     epoch_sz = 60000
     train_gen = get_data_gen(
         data_filepath,
-        preprocessing=process_img,
         flip_prob=0.25
     )
     train_batch_gen = batcher(train_gen, batch_sz)
     valid_gen = get_data_gen(
         data_filepath,
-        preprocessing=process_img,
         validation=True,
         flip_prob=0.0
     )
@@ -185,36 +203,4 @@ if __name__ == '__main__':
             validation_data=valid_batch_gen,
             validation_steps=300,
     )
-    model.save('model0.h5')
-
-    batch_sz = 2*batch_sz
-    train_batch_gen = batcher(train_gen, batch_sz)
-    model.fit_generator(
-            train_batch_gen,
-            steps_per_epoch=epoch_sz//batch_sz,
-            epochs=5,
-            use_multiprocessing=True,
-            validation_data=valid_batch_gen,
-            validation_steps=300,
-    )
-    model.save('model1.h5')
-
-    model.fit_generator(
-            train_batch_gen,
-            steps_per_epoch=epoch_sz//batch_sz,
-            epochs=5,
-            use_multiprocessing=True,
-            validation_data=valid_batch_gen,
-            validation_steps=300,
-    )
-    model.save('model2.h5')
-
-    model.fit_generator(
-            train_batch_gen,
-            steps_per_epoch=epoch_sz//batch_sz,
-            epochs=5,
-            use_multiprocessing=True,
-            validation_data=valid_batch_gen,
-            validation_steps=300,
-    )
-    model.save('model3.h5')
+    model.save('model.h5')
