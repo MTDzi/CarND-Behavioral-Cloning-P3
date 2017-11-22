@@ -171,11 +171,14 @@ if __name__ == '__main__':
     data_filepath = 'data/new_data/'
 
     # Surprisingly, my best model was the "LeNet like model" (my own design)
-    # model = get_lenet_like_model()
-    model = get_experiment()
+    model = get_lenet_like_model()
+    #model = get_experiment()
     model.compile(loss='mse',
                   optimizer=Adam(lr=1e-4),
                   metrics=['mse'])
+    #model.compile(loss='categorical_crossentropy',
+    #              optimizer=Adam(lr=1e-4),
+    #              metrics=['categorical_crossentropy'])
 
     batch_sz = 32
     epoch_sz = 60000
