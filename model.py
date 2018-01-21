@@ -83,14 +83,17 @@ def get_lenet_like_model():
     inp = Input(inp_shape)
 
     x = Conv2D(4, (1, 1), kernel_regularizer=l2(reg))(inp)
-    
-    x = Conv2D(num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(reg))(x)
+
+    x = Conv2D(num_filters, (filter_sz, filter_sz),
+               padding='same', kernel_regularizer=l2(reg))(x)
     x = MaxPooling2D(2, 2)(x)
     x = ELU()(x)
-    x = Conv2D(2*num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(reg))(x)
+    x = Conv2D(2*num_filters, (filter_sz, filter_sz),
+               padding='same', kernel_regularizer=l2(reg))(x)
     x = MaxPooling2D(2, 2)(x)
     x = ELU()(x)
-    x = Conv2D(4*num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(reg))(x)
+    x = Conv2D(4*num_filters, (filter_sz, filter_sz),
+               padding='same', kernel_regularizer=l2(reg))(x)
     x = MaxPooling2D(2, 2)(x)
     x = ELU()(x)
 
