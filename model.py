@@ -8,11 +8,18 @@ from keras.layers.advanced_activations import ELU
 from keras.optimizers import Adam
 from keras.regularizers import l2
 
-from image_preprocessing import RESIZE_FACTOR
+from image_preprocessing import RESIZE_FACTOR, TRIM
+
+
+PROCESSED_SHAPE = (
+        int(RESIZE_FACTOR*(160-TRIM)),
+        int(RESIZE_FACTOR*320),
+        3
+) 
 
 
 def get_lenet_on_steroids_model(l2_reg=1e-3, filter_sz=5, num_filters=16):
-    inp_shape = (int(RESIZE_FACTOR*110), int(RESIZE_FACTOR*320), 3)
+    inp_shape = PROCESSED_SHAPE 
     inp = Input(inp_shape)
     inp_ = Conv2D(4, (1, 1), kernel_regularizer=l2(l2_reg))(inp)
     x = Conv2D(num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(l2_reg))(inp_)
@@ -59,7 +66,7 @@ def get_lenet_on_steroids_model(l2_reg=1e-3, filter_sz=5, num_filters=16):
 
 
 def get_lenet_like_model(l2_reg=1e-3, filter_sz=5, num_filters=16, use_conv_1x1=True):
-    inp_shape = (int(RESIZE_FACTOR*110), int(RESIZE_FACTOR*320), 3)
+    inp_shape = PROCESSED_SHAPE
     inp = Input(inp_shape)
 
     if use_conv_1x1:
@@ -99,6 +106,8 @@ def get_lenet_like_model(l2_reg=1e-3, filter_sz=5, num_filters=16, use_conv_1x1=
 
 
 def get_nvidia_model(l2_reg=1e-3, filter_sz=5, num_filters=16):
+    inp_shape = PROCESSED_SHAPE
+    inp = Input(inp_shape)
 
     x = Conv2D(24, (5,5), strides=(2,2), padding='same', kernel_regularizer=l2(l2_reg))(inp)
     x = ELU()(x)
@@ -159,7 +168,7 @@ if __name__ == '__main__':
     model.fit_generator(
             train_batch_gen,
             steps_per_epoch=epoch_sz//batch_sz,
-            epochs=3,
+            epochs=10,
             use_multiprocessing=True,
             validation_data=valid_batch_gen,
             validation_steps=300,
