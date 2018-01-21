@@ -12,7 +12,6 @@ from image_preprocessing import RESIZE_FACTOR
 
 
 def get_lenet_on_steroids_model(l2_reg=1e-3, filter_sz=5, num_filters=16):
-
     inp_shape = (int(RESIZE_FACTOR*110), int(RESIZE_FACTOR*320), 3)
     inp = Input(inp_shape)
     inp_ = Conv2D(4, (1, 1), kernel_regularizer=l2(l2_reg))(inp)
@@ -58,8 +57,8 @@ def get_lenet_on_steroids_model(l2_reg=1e-3, filter_sz=5, num_filters=16):
 
     return Model(inp, x)
 
-def get_lenet_like_model(l2_reg=1e-3, filter_sz=5, num_filters=16, use_conv_1x1=True):
 
+def get_lenet_like_model(l2_reg=1e-3, filter_sz=5, num_filters=16, use_conv_1x1=True):
     inp_shape = (int(RESIZE_FACTOR*110), int(RESIZE_FACTOR*320), 3)
     inp = Input(inp_shape)
 
@@ -68,13 +67,18 @@ def get_lenet_like_model(l2_reg=1e-3, filter_sz=5, num_filters=16, use_conv_1x1=
     else:
         x = inp
 
-    x = Conv2D(num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(l2_reg))(x)
+    x = Conv2D(num_filters, (filter_sz, filter_sz),
+               padding='same', kernel_regularizer=l2(l2_reg))(x)
     x = MaxPooling2D(2, 2)(x)
     x = ELU()(x)
-    x = Conv2D(2*num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(l2_reg))(x)
+
+    x = Conv2D(2*num_filters, (filter_sz, filter_sz),
+               padding='same', kernel_regularizer=l2(l2_reg))(x)
     x = MaxPooling2D(2, 2)(x)
     x = ELU()(x)
-    x = Conv2D(4*num_filters, (filter_sz, filter_sz), kernel_regularizer=l2(l2_reg))(x)
+
+    x = Conv2D(4*num_filters, (filter_sz, filter_sz),
+               padding='same', kernel_regularizer=l2(l2_reg))(x)
     x = MaxPooling2D(2, 2)(x)
     x = ELU()(x)
 
@@ -155,7 +159,7 @@ if __name__ == '__main__':
     model.fit_generator(
             train_batch_gen,
             steps_per_epoch=epoch_sz//batch_sz,
-            epochs=10,
+            epochs=3,
             use_multiprocessing=True,
             validation_data=valid_batch_gen,
             validation_steps=300,
