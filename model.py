@@ -8,11 +8,11 @@ from keras.layers.advanced_activations import ELU
 from keras.optimizers import Adam
 from keras.regularizers import l2
 
-from image_preprocessing import RESIZE_FACTOR, TRIM
+from image_preprocessing import RESIZE_FACTOR, TRIM_DOWN, TRIM_UP
 
 
 PROCESSED_SHAPE = (
-        int(RESIZE_FACTOR*(160-TRIM)),
+        int(RESIZE_FACTOR*(160-TRIM_UP-TRIM_DOWN)),
         int(RESIZE_FACTOR*320),
         3
 ) 
@@ -173,4 +173,24 @@ if __name__ == '__main__':
             validation_data=valid_batch_gen,
             validation_steps=300,
     )
-    model.save('model.h5')
+    model.save('model_with_conv_1x1_10.h5') 
+
+    model.fit_generator(
+            train_batch_gen,
+            steps_per_epoch=epoch_sz//batch_sz,
+            epochs=1,
+            use_multiprocessing=True,
+            validation_data=valid_batch_gen,
+            validation_steps=300,
+    )
+    model.save('model_with_conv_1x1_11.h5') 
+
+    model.fit_generator(
+            train_batch_gen,
+            steps_per_epoch=epoch_sz//batch_sz,
+            epochs=1,
+            use_multiprocessing=True,
+            validation_data=valid_batch_gen,
+            validation_steps=300,
+    )
+    model.save('model_with_conv_1x1_12.h5') 

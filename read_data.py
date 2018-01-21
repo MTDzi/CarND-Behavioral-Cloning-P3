@@ -49,13 +49,6 @@ def get_data_gen(path='data/default_set/', margin=.25, flip_prob=.5, val_part=10
             if np.random.rand() < flip_prob:
                 image, angle = np.fliplr(image), -angle
 
-            #if np.abs(angle) < 0.01:
-            #    angle = (0, 1, 0)
-            #elif angle < 0:
-            #    angle = (1, 0, 0)
-            #else:
-            #    angle = (0, 0, 1)
-
             yield image, angle
 
 
